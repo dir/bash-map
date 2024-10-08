@@ -4,19 +4,10 @@
     <img alt="bash-map" src=".github/readme.png" />
   </picture>
   <hr />
-  <br />
-  <a href="https://github.com/dir/bash-map/actions">
-    <img alt="Github Actions" src="https://github.com/dir/bash-map/actions/workflows/shell-ci.yaml/badge.svg?branch=main&event=push">
-  </a>
-  <a href="https://github.com/dir/bash-map/blob/main/LICENSE.md">
-    <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-red.svg" />
-  </a>
-  <a href="https://www.gnu.org/software/bash">
-    <img alt="Bash" src="https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=fff">
-  </a>
-  <a href="https://www.shellcheck.net">
-    <img alt="ShellCheck" src="https://img.shields.io/badge/-%23AAABFF?label=ShellCheck&labelColor=white" />
-  </a>
+  <a href="https://github.com/dir/bash-map/actions"><img alt="Github Actions" src="https://github.com/dir/bash-map/actions/workflows/shell-ci.yaml/badge.svg?branch=main&event=push"></a>
+  <a href="https://github.com/dir/bash-map/blob/main/LICENSE.md"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-red.svg" /></a>
+  <a href="https://www.gnu.org/software/bash"><img alt="Bash" src="https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=fff"></a>
+  <a href="https://www.shellcheck.net"><img alt="ShellCheck" src="https://img.shields.io/badge/-%23AAABFF?label=ShellCheck&labelColor=white" /></a>
   <br />
   <br />
   <figure>
@@ -53,20 +44,25 @@ You have two main options for using bash-map:
 
 1. Clone the repository:
 
+   ```bash
    git clone https://github.com/dir/bash-map.git
    cd bash-map
+   ```
 
 2. Copy the script directly:
 
    You can copy the contents of `src/bash-map.sh` into your project or download it:
 
+   ```bash
    curl -O https://raw.githubusercontent.com/dir/bash-map/main/src/bash-map.sh
+   ```
 
 ### Usage
 
 1. Source the script in your Bash environment:
 
    If you cloned the repo or have the script in your project directory:
+
    ```bash
    #!/bin/bash
 
@@ -75,6 +71,7 @@ You have two main options for using bash-map:
    ```
 
    If you've installed it in your PATH:
+
    ```bash
    #!/bin/bash
 
@@ -83,54 +80,54 @@ You have two main options for using bash-map:
    ```
 
 2. Basic operations:
-  ```bash
-  #!/bin/bash
-  . bash-map
 
-  # Create a new map
-  map::make user "
-    [name]=John Doe
-    [age]=30
-    [spaces are allowed]=true
-    [whitespace]  =  is allowed
-  "
+```bash
+#!/bin/bash
+. bash-map
 
-  # Set key-value pairs
-  map::set user "city" "New York"
+# Create a new map
+map::make user "
+  [name]=John Doe
+  [age]=30
+  [spaces are allowed]=true
+  [whitespace]  =  is allowed
+"
 
-  # Get values
-  name=$(map::get user "name")
-  echo "Name: $name"
+# Set key-value pairs
+map::set user "city" "New York"
 
-  # Check if a key exists
-  if map::has user "age"; then
-    echo "Age is set"
-  fi
+# Get values
+name=$(map::get user "name")
+echo "Name: $name"
 
-  # Update key-value pairs
-  map::set user "age" 31
+# Check if a key exists
+if map::has user "age"; then
+  echo "Age is set"
+fi
 
-  # Delete a key
-  map::delete user "spaces are allowed"
+# Update key-value pairs
+map::set user "age" 31
 
-  # Get all keys (default delimiter is ,)
-  keys=$(map::keys user -d " ")
-  echo "Keys: $keys"
+# Delete a key
+map::delete user "spaces are allowed"
 
-  # Get all values
-  values=$(map::values user)
-  echo "Values: $values"
+# Get all keys (default delimiter is ,)
+keys=$(map::keys user -d " ")
+echo "Keys: $keys"
 
-  # Get map size
-  size=$(map::size my_map)
-  echo "Map size: $size"
+# Get all values
+values=$(map::values user)
+echo "Values: $values"
 
-  # Print the entire map
-  map::print user
+# Get map size
+size=$(map::size my_map)
+echo "Map size: $size"
 
-  # Clear the map
-  map::clear user
-   ```
+# Print the entire map
+map::print user
+
+# Clear the map
+map::clear user
+```
 
 These examples demonstrate the core functionality of bash-map. For more detailed information on each function and additional features, refer to the full documentation or use the built-in help tooltips in your IDE if you're using [bash-language-server](https://github.com/bash-lsp/bash-language-server).
-
