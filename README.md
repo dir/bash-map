@@ -26,7 +26,7 @@ bash-map allows you to perform robust key-value operations in pure Bash without 
 
 ### Highlights
 
-- 🐚&nbsp; Pure Bash implementation - no external dependencies (not even `sed`, which on macOS is about as reliable as a politician's promise)
+- 🐚&nbsp; Pure Bash implementation - no external dependencies (not even `sed`, _which on macOS is about as reliable as a politician's promise_)
 - 🔁&nbsp; Backwards compatible with Bash versions **prior to 4.x**
 - 🧰&nbsp; Comprehensive API - `make`, `get`, `set`, `delete`, `print`, `clear`, `size`, `keys`, `values`, and more
 - 📦&nbsp; Portable and easily integrable into existing shell scripts
