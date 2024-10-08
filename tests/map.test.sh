@@ -1,9 +1,8 @@
 #!/bin/bash
 
-script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+script_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
-# shellcheck source=../src/map.sh
-. "$script_path/../src/map.sh"
+source "${script_dir%/*}/src/map.sh"
 
 # Test map::make and map::get
 test_make_and_get() {
