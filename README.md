@@ -83,6 +83,7 @@ You have two main options for using bash-map:
 
 ```bash
 #!/bin/bash
+
 . bash-map
 
 # Create a new map
