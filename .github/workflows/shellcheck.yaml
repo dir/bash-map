@@ -20,9 +20,11 @@ jobs:
           cli: "./tests/map.test.sh"
 
   shellcheck:
-    name: Shellcheck
+    name: Run ShellCheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
+        with:
+          check_together: "yes"
