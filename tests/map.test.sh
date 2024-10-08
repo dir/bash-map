@@ -1,7 +1,7 @@
 #!/bin/bash
 
 script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-. "$script_path/map.sh"
+. "$script_path/../src/map.sh"
 
 # Test map::make and map::get
 test_make_and_get() {
