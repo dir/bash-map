@@ -1,6 +1,8 @@
 #!/bin/bash
 
 script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../src/map.sh
 . "$script_path/../src/map.sh"
 
 # Test map::make and map::get
@@ -126,4 +128,5 @@ test_escaping() {
 }
 
 # Run the tests
+# shellcheck source=/dev/null
 . shunit2
