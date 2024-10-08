@@ -22,14 +22,12 @@
 
 ## Intro
 
-bash-map allows you to perform robust key-value operations in pure Bash without native associative arrays (which are only available in Bash 4.x and later).
+bash-map allows you to perform robust key-value operations in pure Bash without built-in associative arrays (which are only available in Bash 4.x and later).
 
-### Features
+### Highlights
 
-- 🐚&nbsp; **Pure Bash** implementation - no external dependencies
-- 🔑&nbsp; Perform robust key-value operations _without native associative arrays_
+- 🐚&nbsp; Pure Bash implementation - no external dependencies (not even `sed`, which on macOS is about as reliable as a politician's promise)
 - 🔁&nbsp; Backwards compatible with Bash versions **prior to 4.x**
-- 🗺️&nbsp; JavaScript `Map`-like API for familiar usage
 - 🧰&nbsp; Comprehensive API - `make`, `get`, `set`, `delete`, `print`, `clear`, `size`, `keys`, `values`, and more
 - 📦&nbsp; Portable and easily integrable into existing shell scripts
 - 🚀&nbsp; Lightweight with minimal overhead
