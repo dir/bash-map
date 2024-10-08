@@ -1,16 +1,17 @@
-name: CI
+name: Shell Script CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 permissions:
   contents: read
 
 jobs:
   tests:
-    name: Run Tests
+    name: Run shunit2 tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
