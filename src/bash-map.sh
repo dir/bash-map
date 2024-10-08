@@ -484,7 +484,8 @@ opts() {
                     if [[ "$opt_def" == "-$opt"* ]]; then
                         found=true
                         eval "local var_name=\${var_names%% *}"
-                        local requires_value=$(echo "$opt_def" | cut -d':' -f5)
+                        local requires_value
+                        requires_value=$(echo "$opt_def" | cut -d':' -f5)
                         if [[ "$requires_value" == "true" ]]; then
                             if [[ $j -eq $((${#stacked_opts} - 1)) && $((i + 1)) -le $# ]]; then
                                 i=$((i + 1))
@@ -524,7 +525,8 @@ opts() {
                     if [[ "$opt_def" == *":--$opt:"* ]]; then
                         found=true
                         eval "local var_name=\${var_names%% *}"
-                        local requires_value=$(echo "$opt_def" | cut -d':' -f5)
+                        local requires_value
+                        requires_value=$(echo "$opt_def" | cut -d':' -f5)
                         if [[ "$requires_value" == "true" ]]; then
                             if [[ -n "$value" ]]; then
                                 eval "$var_name=\"\$value\""
@@ -558,7 +560,8 @@ opts() {
                     if [[ "$opt_def" == "-$opt:"* ]]; then
                         found=true
                         eval "local var_name=\${var_names%% *}"
-                        local requires_value=$(echo "$opt_def" | cut -d':' -f5)
+                        local requires_value
+                        requires_value=$(echo "$opt_def" | cut -d':' -f5)
                         if [[ "$requires_value" == "true" ]]; then
                             if [[ $((i + 1)) -le $# ]]; then
                                 i=$((i + 1))

@@ -3,7 +3,7 @@
     <source media="(prefers-color-scheme: dark)" srcset=".github/readme.png" />
     <img alt="bash-map" src=".github/readme.png" />
   </picture>
-  <br />
+  <hr />
   <br />
   <a href="https://github.com/dir/bash-map/actions">
     <img alt="Github Actions" src="https://github.com/dir/bash-map/actions/workflows/shell-ci.yaml/badge.svg?branch=main&event=push">
