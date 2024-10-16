@@ -95,12 +95,11 @@ map::set() {
     local map
     map=$(map::_arg "$1") || return 1
 
-    local data pair
-    data=$(map::_serialize "$1")
+    local pair
     pair=$(map::_process_pair "$2" "$3")
 
     local new_data
-    new_data=$(echo -n "$data" | tr "$_MAP_DELIMITER" '\n' | grep -v "^$(map::_escape "$2")${_MAP_KV_SEPARATOR}" | tr '\n' "$_MAP_DELIMITER")
+    new_data=$(echo -n "$map" | tr "$_MAP_DELIMITER" '\n' | grep -v "^$(map::_escape "$2")${_MAP_KV_SEPARATOR}" | tr '\n' "$_MAP_DELIMITER")
     new_data="${new_data}${pair}${_MAP_DELIMITER}"
 
     map::_deserialize "$1" "${new_data%"$_MAP_DELIMITER"}"
@@ -128,7 +127,7 @@ map::print() {
         echo "(empty)"
     else
         echo -n "$map" |
-            awk -v RS="$_MAP_DELIMITER" -v FS="$_MAP_KV_SEPARATOR" -v OFS=": " '
+            awk -v RS="$_MAP_DELIMITER" -v FS="$_MAP_KV_SEPARATOR" '
             function unescape(str) {
                 gsub(/\\/, "\\\\", str)
                 gsub(/\x1E/, ":", str)
@@ -137,7 +136,7 @@ map::print() {
             }
             {
                 if (NF == 2) {
-                    print unescape($1), unescape($2)
+                    printf "[%s]=%s\n", unescape($1), unescape($2)
                 }
             }
         '
@@ -215,13 +214,12 @@ map::exists() {
 # @see map::make()
 # @see map::clear()
 map::size() {
-    local map
-    map=$(map::_arg "$1") || return 1
-
-    if [ -z "$map" ]; then
+    local keys
+    keys=$(map::keys "$1")
+    if [ -z "$keys" ]; then
         echo 0
     else
-        echo -n "$map" | tr -cd "$_MAP_DELIMITER" | wc -c | tr -d ' '
+        echo "$keys" | tr ',' '\n' | wc -l | awk '{print $1}'
     fi
 }
 
@@ -239,30 +237,29 @@ map::size() {
 # @see map::keys()
 # @see map::print()
 map::values() {
+    local delimiter=","
     local map
     map=$(map::_arg "$1") || return 1
 
-    local first=true
-    echo -n "$map" | tr "$_MAP_DELIMITER" '\n' | cut -d "$_MAP_KV_SEPARATOR" -f2- | while IFS= read -r value; do
-        if [ "$first" = true ]; then
-            first=false
-        else
-            echo # This adds a newline before each value except the first
-        fi
-        map::_unescape "$value"
-    done
+    local result=""
+    local values=""
+    while IFS= read -r value; do
+        value=$(map::_unescape "$value")
+        values="${values}${value}"$'\n'
+    done < <(echo -n "$map" | tr "$_MAP_DELIMITER" '\n' | cut -d "$_MAP_KV_SEPARATOR" -f2-)
+
+    values="${values%$'\n'}"
+    result=$(echo -n "$values" | paste -sd "$delimiter" -)
+
+    echo -n "$result"
 }
 
 # @description Get all keys from the specified map.
 #
 # @example
 #    map::keys my_map
-#    map::keys my_map -d " "
-#    map::keys my_map --delimiter="," --trailing-delimiter
 #
 # @arg $1 string The name of the map
-# @option -d, --delimiter string The delimiter to use between keys (default: ",")
-# @option -t, --trailing-delimiter Add a trailing delimiter (default: false)
 #
 # @stdout All keys in the map, separated by the specified delimiter.
 #
@@ -272,30 +269,19 @@ map::values() {
 # @see map::values()
 # @see map::print()
 map::keys() {
-    local map delimiter trailing_delimiter
-
-    opts "
-        $(opt::define "-d" "--delimiter" "," "false" "true") delimiter
-        $(opt::define "-t" "--trailing-delimiter" "false" "false" "false") trailing_delimiter
-    " "$@"
-
+    local delimiter=","
+    local map
     map=$(map::_arg "$1") || return 1
 
-    local first=true
     local result=""
+    local keys=""
     while IFS= read -r key; do
         key=$(map::_unescape "$key")
-        if [ "$first" = true ]; then
-            result="$key"
-            first=false
-        else
-            result="$result$delimiter$key"
-        fi
+        keys="${keys}${key}"$'\n'
     done < <(echo -n "$map" | tr "$_MAP_DELIMITER" '\n' | cut -d "$_MAP_KV_SEPARATOR" -f1)
 
-    if [[ "$trailing_delimiter" == "true" && -n "$result" ]]; then
-        result="$result$delimiter"
-    fi
+    keys="${keys%$'\n'}"
+    result=$(echo -n "$keys" | paste -sd "$delimiter" -)
 
     echo -n "$result"
 }
@@ -316,17 +302,11 @@ map::keys() {
 # @see map::get()
 # @see map::set()
 map::has() {
-    local name="$1"
-    local key="$2"
-    local data
-    data=$(map::_serialize "$name")
+    local map key
+    map=$(map::_arg "$1") || return 1
+    key=$(map::_escape "$2")
 
-    if [[ -z $data ]]; then
-        return 1
-    fi
-
-    key=$(map::_escape "$key")
-    if echo -n "$data" | tr "$_MAP_DELIMITER" '\n' | grep -q "^${key}${_MAP_KV_SEPARATOR}"; then
+    if echo -n "$map" | tr "$_MAP_DELIMITER" '\n' | grep -q "^${key}${_MAP_KV_SEPARATOR}"; then
         return 0
     else
         return 1
@@ -385,15 +365,12 @@ _MAP_KV_SEPARATOR=$'\x1E' # Record Separator
 
 # @internal
 map::_serialize() {
-    local name="$1"
-    eval echo -n \$"${name}_map_data"
+    eval echo -n \$"${1}_map_data"
 }
 
 # @internal
 map::_deserialize() {
-    local name="$1"
-    local data="$2"
-    eval "${name}_map_data='$data'"
+    eval "${1}_map_data='$2'"
 }
 
 # @internal
@@ -451,249 +428,6 @@ map::_arg() {
     data=$(map::_serialize "$map")
 
     echo "$data"
-}
-
-opts() {
-    local opts="$1"
-    shift
-
-    local option_defs=""
-    local var_names=""
-
-    # Parse the opts string
-    while read -r opt_def var_name; do
-        if [[ -n "$opt_def" && -n "$var_name" ]]; then
-            option_defs="$option_defs$opt_def "
-            var_names="$var_names$var_name "
-        fi
-    done <<<"$opts"
-
-    local i=1
-    while [[ $i -le $# ]]; do
-        local arg
-        eval "arg=\${$i}"
-
-        if [[ "$arg" == -* && "$arg" != --* ]]; then
-            # Handle stacked short options
-            local stacked_opts="${arg#-}"
-            for ((j = 0; j < ${#stacked_opts}; j++)); do
-                local opt="${stacked_opts:$j:1}"
-                local found=false
-                local k=1
-                for opt_def in $option_defs; do
-                    if [[ "$opt_def" == "-$opt"* ]]; then
-                        found=true
-                        eval "local var_name=\${var_names%% *}"
-                        local requires_value
-                        requires_value=$(echo "$opt_def" | cut -d':' -f5)
-                        if [[ "$requires_value" == "true" ]]; then
-                            if [[ $j -eq $((${#stacked_opts} - 1)) && $((i + 1)) -le $# ]]; then
-                                i=$((i + 1))
-                                eval "local value=\${$i}"
-                                eval "$var_name=\"\$value\""
-                            else
-                                echo "Error: Option -$opt requires a value" >&2
-                                return 1
-                            fi
-                        else
-                            eval "$var_name=\"true\""
-                        fi
-                        break
-                    fi
-                    k=$((k + 1))
-                    var_names="${var_names#* }"
-                done
-                if [[ "$found" == "false" ]]; then
-                    echo "Error: Unknown option -$opt" >&2
-                    return 1
-                fi
-                var_names="$var_names "
-            done
-        else
-            # Handle long options and single short options
-            case "$arg" in
-            --*)
-                local opt="${arg#--}"
-                local value
-                if [[ "$opt" == *=* ]]; then
-                    value="${opt#*=}"
-                    opt="${opt%%=*}"
-                fi
-                local found=false
-                local k=1
-                for opt_def in $option_defs; do
-                    if [[ "$opt_def" == *":--$opt:"* ]]; then
-                        found=true
-                        eval "local var_name=\${var_names%% *}"
-                        local requires_value
-                        requires_value=$(echo "$opt_def" | cut -d':' -f5)
-                        if [[ "$requires_value" == "true" ]]; then
-                            if [[ -n "$value" ]]; then
-                                eval "$var_name=\"\$value\""
-                            elif [[ $((i + 1)) -le $# ]]; then
-                                i=$((i + 1))
-                                eval "value=\${$i}"
-                                eval "$var_name=\"\$value\""
-                            else
-                                echo "Error: Option --$opt requires a value" >&2
-                                return 1
-                            fi
-                        else
-                            eval "$var_name=\"true\""
-                        fi
-                        break
-                    fi
-                    k=$((k + 1))
-                    var_names="${var_names#* }"
-                done
-                if [[ "$found" == "false" ]]; then
-                    echo "Error: Unknown option --$opt" >&2
-                    return 1
-                fi
-                var_names="$var_names "
-                ;;
-            -*)
-                local opt="${arg#-}"
-                local found=false
-                local k=1
-                for opt_def in $option_defs; do
-                    if [[ "$opt_def" == "-$opt:"* ]]; then
-                        found=true
-                        eval "local var_name=\${var_names%% *}"
-                        local requires_value
-                        requires_value=$(echo "$opt_def" | cut -d':' -f5)
-                        if [[ "$requires_value" == "true" ]]; then
-                            if [[ $((i + 1)) -le $# ]]; then
-                                i=$((i + 1))
-                                eval "local value=\${$i}"
-                                eval "$var_name=\"\$value\""
-                            else
-                                echo "Error: Option -$opt requires a value" >&2
-                                return 1
-                            fi
-                        else
-                            eval "$var_name=\"true\""
-                        fi
-                        break
-                    fi
-                    k=$((k + 1))
-                    var_names="${var_names#* }"
-                done
-                if [[ "$found" == "false" ]]; then
-                    echo "Error: Unknown option -$opt" >&2
-                    return 1
-                fi
-                var_names="$var_names "
-                ;;
-            esac
-        fi
-        i=$((i + 1))
-    done
-}
-
-opt::parse() {
-    local -a options=()
-    local expecting_value=false
-    local current_option=""
-    local result=""
-
-    # Collect options
-    while [[ $# -gt 0 && "$1" != "--" ]]; do
-        options+=("$1")
-        shift
-    done
-    shift # Remove "--"
-
-    # Parse arguments
-    while [[ $# -gt 0 ]]; do
-        if $expecting_value; then
-            result="${result}${current_option}:$1\n"
-            expecting_value=false
-        else
-            local found=false
-            if [[ "$1" =~ ^-[^-] ]]; then
-                # Handle combined short options
-                local combined_opts="${1#-}"
-                while [[ -n "$combined_opts" ]]; do
-                    local current_opt="${combined_opts:0:1}"
-                    combined_opts="${combined_opts:1}"
-                    for opt in "${options[@]}"; do
-                        IFS=':' read -r short long default required expects_value <<<"$opt"
-                        if [[ "-$current_opt" == "$short" ]]; then
-                            found=true
-                            current_option="${short#-}"
-                            if [[ "$expects_value" == "true" ]]; then
-                                if [[ -n "$combined_opts" ]]; then
-                                    result="${result}${current_option}:${combined_opts}\n"
-                                    combined_opts=""
-                                else
-                                    expecting_value=true
-                                fi
-                            else
-                                result="${result}${current_option}:true\n"
-                            fi
-                            break
-                        fi
-                    done
-                    if ! $found; then
-                        echo "Error: Unknown option -$current_opt" >&2
-                        return 1
-                    fi
-                done
-            else
-                # Handle long options and single short options
-                for opt in "${options[@]}"; do
-                    IFS=':' read -r short long default required expects_value <<<"$opt"
-                    if [[ "$1" == "$short" || "$1" == "$long" ]]; then
-                        found=true
-                        current_option="${short#-}"
-                        if [[ "$expects_value" == "true" ]]; then
-                            expecting_value=true
-                        else
-                            result="${result}${current_option}:true\n"
-                        fi
-                        break
-                    elif [[ "$1" == "$short="* || "$1" == "$long="* ]]; then
-                        found=true
-                        current_option="${short#-}"
-                        value="${1#*=}"
-                        result="${result}${current_option}:$value\n"
-                        break
-                    fi
-                done
-            fi
-            if ! $found; then
-                echo "Error: Unknown option $1" >&2
-                return 1
-            fi
-        fi
-        shift
-    done
-
-    # Check for missing required options and set defaults
-    for opt in "${options[@]}"; do
-        IFS=':' read -r short long default required expects_value <<<"$opt"
-        if ! echo -e "$result" | grep -q "^${short#-}:"; then
-            if [[ "$required" == "true" ]]; then
-                echo "Error: Required option $long is missing" >&2
-                return 1
-            elif [[ -n "$default" ]]; then
-                result="${result}${short#-}:$default\n"
-            fi
-        fi
-    done
-
-    echo -e "$result"
-}
-
-opt::define() {
-    echo "$1:$2:$3:$4:$5"
-}
-
-opt::get_value() {
-    local parsed_opts="$1"
-    local option_short="$2"
-    echo "$parsed_opts" | grep "^${option_short#-}:" | cut -d':' -f2
 }
 
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then

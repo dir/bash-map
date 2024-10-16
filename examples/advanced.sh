@@ -10,7 +10,6 @@ map::make items "
     [grape]  = 3.99
 "
 
-# Create a map for a shopping cart
 map::make cart "
     [apple]  = 3
     [orange] = 4

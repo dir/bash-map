@@ -18,7 +18,7 @@ jobs:
       - name: Run shunit2 tests
         uses: sudo-bot/action-shunit2@latest
         with:
-          cli: "./tests/bash-map.test.sh"
+          cli: "./test/bash-map.test.sh"
 
   shellcheck:
     name: Run ShellCheck

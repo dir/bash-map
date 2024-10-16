@@ -1,7 +1,6 @@
 #!/bin/bash
 
 script_dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
-
 . "${script_dir%/*}/src/bash-map.sh"
 
 # Test map::make and map::get
@@ -76,6 +75,7 @@ test_size() {
         [key3]=value3
     "
 
+    echo "keys: $(map::keys test_map)"
     assertEquals 3 "$(map::size test_map)"
 
     map::delete test_map key2
@@ -92,20 +92,20 @@ test_values() {
 
     local values
     values=$(map::values test_map)
-    assertSame "value1
-value2
-value3" "$values"
+    assertSame "value1,value2,value3" "$values"
 }
 
 # Test map::keys
 test_keys() {
     map::make test_map "
-        [key1]=value1
-        [key2]=value2
-        [key3]=value3
+        [key1] =      value1
+        [key2] =   value2
+        [key3] =  value3
     "
 
-    #assertSame "key1key2key3" "$(map::keys test_map)"
+    local keys
+    keys=$(map::keys test_map)
+    assertSame "key1,key2,key3" "$keys"
 }
 
 # Test map::has
